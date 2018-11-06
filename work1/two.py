@@ -41,7 +41,7 @@ menu = {
     },
     '山东':{},
 }
-
+flag = 0;
 while True:
     # 一级
     for m1 in menu:
@@ -58,9 +58,14 @@ while True:
         for m2 in menu[next1]:
             print(m2)
         print("R：返回上级")
+        print("Z：退出菜单")
         next2 = input("请选择菜单:")
         if(next2 == 'R'):
             print("返回上级菜单")
+            break
+        if (next2 == "Z"):
+            print("退出菜单")
+            flag = 1
             break
         if(next2 not in menu[next1].keys()):
             print('菜单不存在')
@@ -69,7 +74,16 @@ while True:
             for m3 in menu[next1][next2].keys():
                 print(m3)
             print("R：返回上级")
+            print("Z：退出菜单")
             next3 = input("请选择菜单")
             if (next3 == "R"):
                 print("返回上级菜单")
                 break
+            if (next3 == "Z"):
+                print("退出菜单")
+                flag = 1
+                break
+        if(flag == 1):
+            break
+    if (flag == 1):
+        break
