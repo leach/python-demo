@@ -42,11 +42,13 @@ menu = {
     '山东':{},
 }
 #当前菜单
-currLevel = menu
-lastLevel = menu
+tempMenu = [menu]
 while True:
+    menuLen = len(tempMenu)
+    if menuLen < 1:
+        print("菜单丢了!")
     #打印当前菜单
-    for v in currLevel:
+    for v in tempMenu[menuLen - 1]:
         print(v)
     #输入选择
     choice = input("选>").strip()
@@ -56,14 +58,16 @@ while True:
         break
     #返回上级
     if choice == "l":
-        currLevel = lastLevel
+        if menuLen > 1:
+            tempMenu.remove(tempMenu[menuLen - 1])
+        else:
+            print("到顶了!")
         continue
     #更新当前菜单
-    if choice in currLevel.keys():
-        if len(currLevel[choice].keys()) == 0:
+    if choice in tempMenu[menuLen - 1].keys():
+        if len(tempMenu[menuLen - 1][choice].keys()) == 0:
             print("到底了!")
         else:
-            lastLevel = currLevel
-            currLevel = currLevel[choice]
+            tempMenu.append(tempMenu[menuLen - 1][choice])
     else:
         print("选择错了!")
