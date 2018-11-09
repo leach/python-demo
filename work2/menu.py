@@ -46,11 +46,10 @@ menu = {
 #当前菜单
 tempMenu = [menu]
 while True:
-    menuLen = len(tempMenu)
-    if menuLen < 1:
+    if len(tempMenu) < 1:
         print("菜单丢了!")
     #打印当前菜单
-    for v in tempMenu[menuLen - 1]:
+    for v in tempMenu[-1]:
         print(v)
     #输入选择
     choice = input("选>").strip()
@@ -60,16 +59,16 @@ while True:
         break
     #返回上级
     if choice == "l":
-        if menuLen > 1:
-            tempMenu.remove(tempMenu[menuLen - 1])
+        if len(tempMenu) > 1:
+            tempMenu.pop()
         else:
             print("到顶了!")
         continue
     #更新当前菜单
-    if choice in tempMenu[menuLen - 1].keys():
-        if len(tempMenu[menuLen - 1][choice].keys()) == 0:
+    if choice in tempMenu[-1].keys():
+        if len(tempMenu[-1][choice].keys()) == 0:
             print("到底了!")
         else:
-            tempMenu.append(tempMenu[menuLen - 1][choice])
+            tempMenu.append(tempMenu[-1][choice])
     else:
         print("选择错了!")
