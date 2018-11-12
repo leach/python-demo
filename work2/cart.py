@@ -63,7 +63,7 @@ while True:
         else:
             print('余额不足')
     else:
-        print("没有此商品")
+        print('\033[1;37;40m没有此商品！\033[0m')
 
 # 保存accounts
 with open("cart.txt", 'w', encoding='utf-8') as ff:
