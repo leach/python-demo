@@ -38,7 +38,8 @@ while True:
     # 选择商品
     choice = input('请选择:').strip()
     if choice == 'q':
-        #展示已购买商品
+        #展示已购买商品1
+        1
         for v in curr_user['carts']:
             print("商品名:%s 价格:%s 购买数量:%s" % (v['name'], v['price'], v['count']))
         print("账户余额: %s" % (curr_user['balance']))
