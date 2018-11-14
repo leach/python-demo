@@ -130,6 +130,9 @@ class Querier:
         print('deletedelete')
         pass
 
+    def read_data(self):
+        print('读取数据')
+
     def exec(self, _command: str):
         """
         执行指令语法
@@ -143,6 +146,7 @@ class Querier:
         #执行指令
         func = getattr(self, dic_cmd['type'])
         if func:
+            self.read_data()
             func(dic_cmd['command'])
         else:
             raise CommandException()
@@ -157,7 +161,7 @@ class Querier:
         command = [command1, command2, command3, command4]
 
         for c in command:
-            print(self.exec(c))
+            self.exec(c)
 
         # try:
         #     f = open(self.data_file, 'r')
