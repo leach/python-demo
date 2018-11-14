@@ -10,6 +10,7 @@ class Querier:
 
     def __init__(self, data_file):
         self.data_file = data_file
+        self.datas = []
 
     def __split_condition(self, condition):
         """
@@ -116,7 +117,7 @@ class Querier:
         return dic
 
     def find(self, command: list):
-        print('ffffffind')
+        print(self.datas)
 
     def add(self, command: list):
         print('addaddadd')
@@ -130,8 +131,17 @@ class Querier:
         print('deletedelete')
         pass
 
+    t_head = ['staff_id', 'name', 'age', 'phone', 'dept', 'enroll_date']
+
     def read_data(self):
-        print('读取数据')
+        try:
+            f = open(self.data_file, 'r', encoding='utf-8')
+            for line in f:
+                info = dict(zip(self.t_head, line.strip().split(',')))
+                self.datas.append(info)
+            f.close()
+        except IOError:
+            print("Error: 没有找到文件或读取文件失败")
 
     def exec(self, _command: str):
         """
@@ -163,12 +173,6 @@ class Querier:
         for c in command:
             self.exec(c)
 
-        # try:
-        #     f = open(self.data_file, 'r')
-        #     for line in f:
-        #         print(line.strip())
-        #     f.close()
-        # except IOError:
-        #     print("Error: 没有找到文件或读取文件失败")
+
 
 
