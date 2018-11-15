@@ -8,9 +8,11 @@ from class2.exception import CommandException
 
 class Querier:
 
-    def __init__(self, data_file):
-        self.data_file = data_file
-        self.datas = []
+    def __init__(self):
+        self.data_path = "data/"
+        self.datas = {}
+
+    table_head = { 'staff': ['staff_id', 'name', 'age', 'phone', 'dept', 'enroll_date']}
 
     def __split_condition(self, condition):
         """
@@ -106,6 +108,7 @@ class Querier:
         command = _command.strip().replace("\n", "")
         _type = re.search('[^\s]*[\s]', command).group().strip()
         dic = {'type': _type}
+
         try:
             dic['command'] = self.dict_parse_switch[_type](self, command)
         except CommandException as e:
@@ -116,8 +119,27 @@ class Querier:
             return None
         return dic
 
+    def filter(self, data_list, table, condition):
+        filter_data = []
+        heads = self.table_head[table]
+        for data in data_list:
+            for cond in condition:
+                col = cond[0].strip()
+                symbol = cond[1].strip()
+                value = cond[2].strip()
+                if col not in heads:
+                    raise CommandException()
+                if (symbol == '>=' and data[col] >= value) or \
+                        (symbol == '<=' and data[col] <= value) or \
+                        (symbol == '=' and data[col] == value) or \
+                        (symbol == '<' and data[col] < value) or \
+                        (symbol == '>' and data[col] > value) or \
+                        (symbol == 'like' and value in data[col]):
+                    filter_data.append(data)
+        return filter_data
+
     def find(self, command: list):
-        print(self.datas)
+        return self.filter(self.datas[command[0]], command[0], command[2])
 
     def add(self, command: list):
         print('addaddadd')
@@ -131,15 +153,15 @@ class Querier:
         print('deletedelete')
         pass
 
-    t_head = ['staff_id', 'name', 'age', 'phone', 'dept', 'enroll_date']
-
-    def read_data(self):
+    def read_data(self, table):
         try:
-            f = open(self.data_file, 'r', encoding='utf-8')
+            _data = []
+            f = open("{}{}".format(self.data_path, table), 'r', encoding='utf-8')
             for line in f:
-                info = dict(zip(self.t_head, line.strip().split(',')))
-                self.datas.append(info)
+                info = dict(zip(self.table_head[table], line.strip().split(',')))
+                _data.append(info)
             f.close()
+            self.datas[table] = _data
         except IOError:
             print("Error: 没有找到文件或读取文件失败")
 
@@ -151,12 +173,14 @@ class Querier:
         """
         #解析指令
         dic_cmd = self.__parse_command(_command)
+        print(dic_cmd)
+        _table = dic_cmd['command'][0]
         if not dic_cmd:
             raise CommandException()
         #执行指令
         func = getattr(self, dic_cmd['type'])
         if func:
-            self.read_data()
+            self.read_data(_table)
             func(dic_cmd['command'])
         else:
             raise CommandException()
@@ -164,10 +188,10 @@ class Querier:
 
     #测试
     def show(self):
-        command1 = "find name, age from staff_table where age > 22 and a like '331'"
-        command2 = 'update staff_table set age=25 where name = "Alex Li"  and a like "331"'
+        command1 = "find name, age from staff where age > 22 and a like '331'"
+        command2 = 'update staff set age=25 where name = "Alex Li"  and a like "331"'
         command3 = 'delete from staff where id=3'
-        command4 = 'add staff_table Alex Li,25,134435344,IT,2015‐10‐29'
+        command4 = 'add staff Alex Li,25,134435344,IT,2015‐10‐29'
         command = [command1, command2, command3, command4]
 
         for c in command:

@@ -2,6 +2,6 @@
 import class2.querier as q
 
 
-querier = q.Querier("datas")
+querier = q.Querier()
 querier.show()
 
