@@ -13,7 +13,9 @@ class Querier:
         self.data_path = "data/"
         self.datas = {}
 
-    table_head = { 'staff': ['staff_id', 'name', 'age', 'phone', 'dept', 'enroll_date']}
+    # {'表名': ('所有列', '主键列名')}
+    table_head = { 'staff': (['staff_id', 'name', 'age', 'phone', 'dept', 'enroll_date'], 'phone'),
+                   'kala': (['staff_id', 'name', 'age', 'phone', 'dept', 'enroll_date'], 'phone')}
 
     def __split_condition(self, condition):
         """
@@ -42,16 +44,16 @@ class Querier:
         :param command: 指令
         :return:
         """
-        table = re.findall(".*from(.*)where.*", command)[0].strip()
-        column = re.findall(".*find(.*)from.*", command)[0].strip().split(',')
-        condition_str = re.findall("where(.*)", command)[0].strip().split('and')
+        list_cmd = re.findall("find(.*)from(.*)where(.*)", command)[0]
+        column = list_cmd[0].strip().split(',')
+        condition_str = list_cmd[2].strip().split('and')
         #处理字段
         for i, col in enumerate(column):
             if ' ' in col.strip() or not col.strip():
                 raise CommandException('查询数据语法错误')
             column[i] = col.strip()
         condition = self.__split_condition(condition_str)
-        return table, column, condition
+        return list_cmd[1].strip(), column, condition
 
     def __parse_add(self, command: str):
         """
@@ -122,65 +124,95 @@ class Querier:
 
     def filter(self, data_list, table, condition):
         filter_data = []
-        heads = self.table_head[table]
+        headers = self.table_head[table][0]
         for data in data_list:
+            _data = dict(zip(headers, data))
             for cond in condition:
                 col = cond[0].strip()
                 symbol = cond[1].strip()
                 value = cond[2].strip()
-                if col not in heads:
+                if col not in headers:
                     raise CommandException('查询数据语法错误')
-                if not ((symbol == '>=' and data[col] >= value) or \
-                        (symbol == '<=' and data[col] <= value) or \
-                        (symbol == '=' and data[col] == value) or \
-                        (symbol == '<' and data[col] < value) or \
-                        (symbol == '>' and data[col] > value) or \
-                        (symbol == 'like' and value in data[col])):
+                if not ((symbol == '>=' and _data[col] >= value) or \
+                        (symbol == '<=' and _data[col] <= value) or \
+                        (symbol == '=' and _data[col] == value) or \
+                        (symbol == '<' and _data[col] < value) or \
+                        (symbol == '>' and _data[col] > value) or \
+                        (symbol == 'like' and value in _data[col])):
                     break;
             else:
                 filter_data.append(data)
         return filter_data
 
+    def write_data(self, table, datas):
+        '''
+        写入数据
+        :param table: 表名
+        :param datas: 数据
+        :return:
+        '''
+        if not datas:
+            return
+        file = "{}{}".format(self.data_path, table)
+        f = open(file, 'w+', encoding='utf-8')
+        for data in datas:
+            f.write(",".join(list(map(str, data))) + "\n")
+        f.close()
+
     def find(self, command: list):
         table = command[0]
         column = command[1]
         condition = command[2]
-        headers = self.table_head[table]
+        if table not in self.table_head.keys():
+            raise CommandException("数据表不存在")
+        headers = self.table_head[table][0]
         filt_data = self.filter(self.datas[table], table, condition)
         if '*' in column:
             return filt_data
         result = []
         for d in filt_data:
+            dict_d = dict(zip(headers, d))
             data = {}
             for col in column:
                 col = col.strip()
                 if col not in headers:
                     raise CommandException('查询数据语法错误')
-                data[col] = d[col]
+                data[col] = dict_d[col]
             result.append(data)
         return result
 
     def add(self, command: list):
+        #新增数据
         table = command[0]
-        table_datas = self.datas[table]
-        if len(table_datas) > 0:
-            id = table_datas[-1][0] + 1
-        else:
-            id = 1
-        command[1].insert(0, id)
         _data = command[1]
-        table_datas.append(_data)
-
-        for i in table_datas:
-            print(i)
-        pass
+        _data.insert(0, -1)
+        headers = self.table_head[table][0]
+        dict_data = dict(zip(headers, _data))
+        #数据表中数据转dict
+        table_datas = self.datas[table]
+        pk_name = self.table_head[table][1]
+        for d in table_datas:
+            dict_d = dict(zip(headers, d))
+            if dict_d[pk_name] == dict_data[pk_name]:
+                raise CommandException('数据已存在')
+        else:
+            if len(table_datas) > 0:
+                id_key = headers[0]
+                dct = dict(zip(headers, table_datas[-1]))
+                id = int(dct[id_key]) + 1
+            else:
+                id = 1
+            _data[0] = id
+            table_datas.append(_data)
+            self.write_data(table, table_datas)
+            return 1
 
     def update(self, command: list):
-        print('updateupdateupdate')
+        print('update')
         pass
 
     def delete(self, command: list):
-        print('deletedelete')
+        print('delete')
         pass
 
     def read_data(self, table):
@@ -192,7 +224,7 @@ class Querier:
             _data = []
             f = open(file, 'r', encoding='utf-8')
             for line in f:
-                info = dict(zip(self.table_head[table], line.strip().split(',')))
+                info = line.strip().split(',')  #dict(zip(self.table_head[table][0], line.strip().split(',')))
                 _data.append(info)
             f.close()
             self.datas[table] = _data
@@ -218,14 +250,33 @@ class Querier:
         else:
             raise CommandException()
 
+    def command(self):
+        '''
+        执行操作指令
+        :return:
+        '''
+        while True:
+            try:
+                cmd = input("请输入操作指令:").strip()
+                result = self.exec(cmd)
+                if type(result) == list:
+                    print("查询结果(%s条):" % (len(result)))
+                    for i in result:
+                        print(i)
+                else:
+                    print("更新数据条数:%s" % (result))
+            except CommandException as e:
+                print(e.message)
+
+
 
     #测试
-    def show(self):
-        command1 = "find * from staff where age > 0 and name like 'W' "
+    def test(self):
+        command1 = "find name,age from staff where age > 0 and name like 'W' "
         command2 = 'update staff set age=25 where name = "Alex Li"  and a like "331"'
         command3 = 'delete from staff where id=3'
-        command4 = 'add kala Alex Li,25,134435344,IT,2015‐10‐29'
-        command = [command4]  #, command2, command3, command4
+        command4 = 'add staff Alex Li,25,1588825,IT,2015-10-29'
+        command = [command1]  #, command2, command3, command4
 
         for c in command:
             staff_list = self.exec(c)
@@ -233,7 +284,4 @@ class Querier:
                 return
             for i in staff_list:
                 print(i)
-
-
-
 

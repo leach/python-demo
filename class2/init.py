@@ -3,5 +3,5 @@ import class2.querier as q
 
 
 querier = q.Querier()
-querier.show()
+querier.command()
 
