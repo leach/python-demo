@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import re
+import os
 
 from class2.exception import CommandException
 
@@ -128,21 +129,50 @@ class Querier:
                 symbol = cond[1].strip()
                 value = cond[2].strip()
                 if col not in heads:
-                    raise CommandException()
-                if (symbol == '>=' and data[col] >= value) or \
+                    raise CommandException('查询数据语法错误')
+                if not ((symbol == '>=' and data[col] >= value) or \
                         (symbol == '<=' and data[col] <= value) or \
                         (symbol == '=' and data[col] == value) or \
                         (symbol == '<' and data[col] < value) or \
                         (symbol == '>' and data[col] > value) or \
-                        (symbol == 'like' and value in data[col]):
-                    filter_data.append(data)
+                        (symbol == 'like' and value in data[col])):
+                    break;
+            else:
+                filter_data.append(data)
         return filter_data
 
     def find(self, command: list):
-        return self.filter(self.datas[command[0]], command[0], command[2])
+        table = command[0]
+        column = command[1]
+        condition = command[2]
+        headers = self.table_head[table]
+        filt_data = self.filter(self.datas[table], table, condition)
+        if '*' in column:
+            return filt_data
+        result = []
+        for d in filt_data:
+            data = {}
+            for col in column:
+                col = col.strip()
+                if col not in headers:
+                    raise CommandException('查询数据语法错误')
+                data[col] = d[col]
+            result.append(data)
+        return result
 
     def add(self, command: list):
-        print('addaddadd')
+        table = command[0]
+        table_datas = self.datas[table]
+        if len(table_datas) > 0:
+            id = table_datas[-1][0] + 1
+        else:
+            id = 1
+        command[1].insert(0, id)
+        _data = command[1]
+        table_datas.append(_data)
+
+        for i in table_datas:
+            print(i)
         pass
 
     def update(self, command: list):
@@ -155,15 +185,19 @@ class Querier:
 
     def read_data(self, table):
         try:
+            file = "{}{}".format(self.data_path, table)
+            if not os.path.exists(file):
+                self.datas[table] = []
+                return
             _data = []
-            f = open("{}{}".format(self.data_path, table), 'r', encoding='utf-8')
+            f = open(file, 'r', encoding='utf-8')
             for line in f:
                 info = dict(zip(self.table_head[table], line.strip().split(',')))
                 _data.append(info)
             f.close()
             self.datas[table] = _data
         except IOError:
-            print("Error: 没有找到文件或读取文件失败")
+            raise CommandException("数据表不存在或查询失败")
 
     def exec(self, _command: str):
         """
@@ -173,7 +207,6 @@ class Querier:
         """
         #解析指令
         dic_cmd = self.__parse_command(_command)
-        print(dic_cmd)
         _table = dic_cmd['command'][0]
         if not dic_cmd:
             raise CommandException()
@@ -181,21 +214,25 @@ class Querier:
         func = getattr(self, dic_cmd['type'])
         if func:
             self.read_data(_table)
-            func(dic_cmd['command'])
+            return func(dic_cmd['command'])
         else:
             raise CommandException()
 
 
     #测试
     def show(self):
-        command1 = "find name, age from staff where age > 22 and a like '331'"
+        command1 = "find * from staff where age > 0 and name like 'W' "
         command2 = 'update staff set age=25 where name = "Alex Li"  and a like "331"'
         command3 = 'delete from staff where id=3'
-        command4 = 'add staff Alex Li,25,134435344,IT,2015‐10‐29'
-        command = [command1, command2, command3, command4]
+        command4 = 'add kala Alex Li,25,134435344,IT,2015‐10‐29'
+        command = [command4]  #, command2, command3, command4
 
         for c in command:
-            self.exec(c)
+            staff_list = self.exec(c)
+            if not staff_list:
+                return
+            for i in staff_list:
+                print(i)
 
 
 
