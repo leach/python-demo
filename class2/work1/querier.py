@@ -4,7 +4,7 @@
 import re
 import os
 
-from class2.exception import CommandException
+from class2.work1.exception import CommandException
 
 
 class Querier:

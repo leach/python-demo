@@ -1,0 +1,2 @@
+[2018-12-09 23:02:10,728 account:transfer:67] WARNING: 账户不存在, FROM:mike, TO:11, AMOUNT:10
+[2018-12-09 23:02:39,433 account:record:125] INFO: 还款, FROM:mike, TO:None, AMOUNT:1580

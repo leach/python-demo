@@ -1,5 +1,5 @@
 
-import class2.querier as q
+import class2.work1.querier as q
 
 
 querier = q.Querier()

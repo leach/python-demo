@@ -1,0 +1,10 @@
+{
+  "mike": {
+    "username": "mike",
+    "password": "mike",
+    "quota": 15000,
+    "rest": 10000,
+    "consumed": 0,
+    "billlist":[]
+  }
+}
