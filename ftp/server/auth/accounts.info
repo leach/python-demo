@@ -1,0 +1,6 @@
+[ftp]
+username=ftp
+password=a7ace5c306b91ac59b391cc9060a4df1
+homedir=/ftp
+maxsize=1024
+usedsize=102
